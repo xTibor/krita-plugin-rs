@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Krita/PythonPlugin
+X-KDE-Library=krita-plugin-rs
+X-Python-2-Compatible=false
+Name=krita-plugin-rs
+Comment=A Krita plugin in Rust
