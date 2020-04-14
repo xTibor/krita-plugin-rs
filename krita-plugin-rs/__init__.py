@@ -1,9 +1,12 @@
+#!/usr/bin/python3
+
 from krita import *
 from PyQt5.QtWidgets import QMessageBox
 import os
 import subprocess
 
 # https://docs.krita.org/en/user_manual/python_scripting/krita_python_plugin_howto.html
+# https://api.kde.org/extragear-api/graphics-apidocs/krita/libs/libkis/html/index.html
 
 class MyExtension(Extension):
     def __init__(self, parent):
@@ -17,15 +20,15 @@ class MyExtension(Extension):
         action.triggered.connect(self.executePlugin)
 
     def executePlugin(self):
-        # TODO: Write to stdin
-        #   layer_width: u32(1)
-        #   layer_height: u32(1)
-        #   layer_data: u8(layer_width * layer_height * 4)
-        manifest_path = os.path.dirname(__file__) + '/Cargo.toml'
-        result = subprocess.run(['cargo', 'run', '--manifest-path', manifest_path], stdout=subprocess.PIPE)
-        message = result.stdout.decode('utf-8')
-        print('Rust plugin results: "' + message + '"')
-        # TODO: Read from stdout
-        #   layer_data: u8(layer_width * layer_height * 4)
+        doc = Krita.instance().activeDocument()
+        if doc is not None:
+            manifest_path = os.path.dirname(__file__) + '/Cargo.toml'
+            process = subprocess.Popen(['cargo', 'run', '--manifest-path', manifest_path, '--', str(doc.width()), str(doc.height())], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            process.stdin.write(doc.pixelData(0, 0, doc.width(), doc.height()))
+
+            message = process.communicate()[0].decode('utf-8')
+            print('Rust plugin results: "' + message + '"')
+            # TODO: Read from stdout
+            #   layer_data: u8(layer_width * layer_height * 4)
 
 Krita.instance().addExtension(MyExtension(Krita.instance()))
