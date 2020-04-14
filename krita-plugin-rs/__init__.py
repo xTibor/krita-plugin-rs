@@ -22,13 +22,15 @@ class MyExtension(Extension):
     def executePlugin(self):
         doc = Krita.instance().activeDocument()
         if doc is not None:
-            manifest_path = os.path.dirname(__file__) + '/Cargo.toml'
-            process = subprocess.Popen(['cargo', 'run', '--manifest-path', manifest_path, '--', str(doc.width()), str(doc.height())], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            manifestPath = os.path.dirname(__file__) + '/Cargo.toml'
+            process = subprocess.Popen(['cargo', 'run', '--manifest-path', manifestPath, '--', str(doc.width()), str(doc.height())], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
             process.stdin.write(doc.pixelData(0, 0, doc.width(), doc.height()))
 
-            message = process.communicate()[0].decode('utf-8')
-            print('Rust plugin results: "' + message + '"')
-            # TODO: Read from stdout
-            #   layer_data: u8(layer_width * layer_height * 4)
+            resultPixelData = process.communicate()[0]
+
+            newLayer = doc.createNode("rustLayer", "paintLayer")
+            newLayer.setPixelData(resultPixelData, 0, 0, doc.width(), doc.height())
+            doc.rootNode().addChildNode(newLayer, None)
+            doc.refreshProjection()
 
 Krita.instance().addExtension(MyExtension(Krita.instance()))

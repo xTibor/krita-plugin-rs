@@ -9,15 +9,19 @@ fn main() {
 
     let data_size = width * height * 4;
     let mut data: Vec<u8> = vec![0; data_size];
+    io::stdin().read_exact(&mut data).unwrap();
 
-    {
-        let stdin = io::stdin();
-        let mut handle = stdin.lock();
-        handle.read_exact(&mut data).unwrap();
+    for y in 0..height {
+        for x in 0..width {
+            let i = (y * width + x) * 4;
+            data[i + 0] = (x & y) as u8; // B
+            data[i + 1] = (x | y) as u8; // G
+            data[i + 2] = (x ^ y) as u8; // R
+
+            // Keep alpha for demo
+            //data[i + 3] = 0xFF; // A
+        }
     }
 
-    println!("Hello from Rust!");
-    println!("width: {}, height: {}", width, height);
-    println!("{:02X} {:02X} {:02X} {:02X}", data[0], data[1], data[2], data[3]);
-    println!("{:02X} {:02X} {:02X} {:02X}", data[data_size - 4], data[data_size - 3], data[data_size - 2], data[data_size - 1]);
+    io::stdout().write_all(&data).unwrap();
 }
