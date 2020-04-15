@@ -25,13 +25,15 @@ class RustExtension(Extension):
             process = subprocess.Popen(
                 [
                     'cargo', 'run',
+                    '--release',
                     '--manifest-path', manifestPath,
                     '--',
                     str(doc.width()),
                     str(doc.height())
                 ],
                 stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE
+                stdout=subprocess.PIPE,
+                cwd=os.path.dirname(__file__)
             )
             process.stdin.write(doc.pixelData(0, 0, doc.width(), doc.height()))
 

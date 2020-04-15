@@ -1,6 +1,8 @@
-use std::io::{self, Write, Read};
+use image::{Bgra, ImageBuffer};
 use std::env;
-use image::{ImageBuffer, Bgra};
+use std::io::{self, Read, Write};
+use std::num::NonZeroU32;
+use wfc_image::*;
 
 // The image crate doesn't export BGRA image types for some reason.
 type BgraImage = ImageBuffer<Bgra<u8>, Vec<u8>>;
@@ -14,14 +16,15 @@ fn main() {
     let mut data: Vec<u8> = vec![0; data_size];
     io::stdin().read_exact(&mut data).unwrap();
 
-    let mut image_buffer = BgraImage::from_raw(width, height, data).unwrap();
+    let image_buffer = BgraImage::from_raw(width, height, data).unwrap();
 
-    for y in 0..height {
-        for x in 0..width {
-            let k = (x ^ y) as u8;
-            image_buffer.put_pixel(x, y, Bgra([255, k, 255 - k, k]));
-        }
-    }
+    let wfc_input_image = image::open("src/ditto.png").unwrap();
+    let wfc_pattern_size = NonZeroU32::new(3).unwrap();
+    let wfc_output_size = Size::new(width, height);
+    let wfc_orientation = &[Orientation::Original];
+    let wfc_retries = retry::NumTimes(10);
+    let wfc_result = wfc_image::generate_image(&wfc_input_image, wfc_pattern_size, wfc_output_size, wfc_orientation, WrapXY, ForbidNothing, wfc_retries);
+    let image_buffer = wfc_result.unwrap().into_bgra();
 
     io::stdout().write_all(&image_buffer.into_raw()).unwrap();
 }
