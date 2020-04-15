@@ -1,14 +1,13 @@
 #!/usr/bin/python3
 
 from krita import *
-from PyQt5.QtWidgets import QMessageBox
 import os
 import subprocess
 
 # https://docs.krita.org/en/user_manual/python_scripting/krita_python_plugin_howto.html
 # https://api.kde.org/extragear-api/graphics-apidocs/krita/libs/libkis/html/index.html
 
-class MyExtension(Extension):
+class RustExtension(Extension):
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -23,7 +22,17 @@ class MyExtension(Extension):
         doc = Krita.instance().activeDocument()
         if doc is not None:
             manifestPath = os.path.dirname(__file__) + '/Cargo.toml'
-            process = subprocess.Popen(['cargo', 'run', '--manifest-path', manifestPath, '--', str(doc.width()), str(doc.height())], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            process = subprocess.Popen(
+                [
+                    'cargo', 'run',
+                    '--manifest-path', manifestPath,
+                    '--',
+                    str(doc.width()),
+                    str(doc.height())
+                ],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE
+            )
             process.stdin.write(doc.pixelData(0, 0, doc.width(), doc.height()))
 
             resultPixelData = process.communicate()[0]
@@ -33,4 +42,4 @@ class MyExtension(Extension):
             doc.rootNode().addChildNode(newLayer, None)
             doc.refreshProjection()
 
-Krita.instance().addExtension(MyExtension(Krita.instance()))
+Krita.instance().addExtension(RustExtension(Krita.instance()))
